@@ -26,6 +26,9 @@ function Dashboard({ date }) {
   return (
     <main>
       <h1>Dashboard</h1>
+      <video controls width="">
+        <source src="../media/restaurant-video.mp4" type="video/mp4" autoPlay loop/>
+      </video>
       <div className="d-md-flex mb-3">
         <h4 className="mb-0">Reservations for date</h4>
       </div>
