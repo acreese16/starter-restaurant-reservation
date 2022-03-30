@@ -41,12 +41,6 @@ function updateByStatus(reservation_id, status) {
     .then((updatedStatus) => updatedStatus[0])
 }
 
-// delete a reservation given it's id
-function destroy(reservation_id) {
-    return knex("reservations")
-    .where({ reservation_id })
-    .del()
-}
 
 
 //function provided by instructions
@@ -65,6 +59,5 @@ module.exports = {
     read,
     update,
     updateByStatus,
-    delete: destroy,
     search,
 }
