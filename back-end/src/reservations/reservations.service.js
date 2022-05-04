@@ -1,12 +1,20 @@
 const knex = require("../db/connection");
 
-// list all reservations by it's reservation date
-function list(reservation_date) {
+// list all reservations
+function list() {
+    return knex("reservations")
+    .select("*")
+    .orderBy("reservation_time", "asc")
+};
+
+// list all reservations according to their date
+function listByDate(reservation_date) {
     return knex("reservations")
     .select("*")
     .where({ reservation_date })
-    .orderBy("reservation_time")
-};
+    .whereNot({ status: "finished" })
+    .orderBy("reservation_time", "asc")
+}
 
 // create a new reservation, given an input
 function create(newReservation) {
@@ -55,6 +63,7 @@ function search(mobile_number) {
 
 module.exports = {
     list,
+    listByDate,
     create,
     read,
     update,
