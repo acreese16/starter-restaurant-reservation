@@ -1,10 +1,11 @@
 const tableService = require("./tables.service");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
-const tablesService = require("./tables.service");
+const hasProperties = require("../errors/hasProperties");
 
 // Middleware
+const hasRequiredFields = hasProperties("table_name", "capacity");
 
-const VALID_PROPERTIES = ["table_name", "capacity", "reservation_id"];
+const VALID_PROPERTIES = ["table_id", "table_name", "capacity", "reservation_id", "created_at", "updated_at"];
 
 async function tableExists(req, res, next) {
   const { table_id } = req.params;
@@ -15,6 +16,15 @@ async function tableExists(req, res, next) {
     return next();
   }
   next({ status: 404, message: `${table_id} cannot be found.` });
+}
+
+async function hasTableName(req, res, next) {
+  const {table_name} = req.body.data;
+
+  if (!table_name || table_name === "" || table_name) {
+    return next({ status: 400, message: "table_name is missing" })
+  }
+  next();
 }
 
 async function hasOnlyValidProperties(req, res, next) {
@@ -30,6 +40,15 @@ async function hasOnlyValidProperties(req, res, next) {
     });
   }
   next();
+}
+
+async function isTableOccupied(req, res, next) {
+  const table = res.locals.table.reservation_id;
+
+  if (table) {
+    return next();
+  }
+  next({ status: 400, message: "Table is not occupied" });
 }
 
 async function tableSeated(req, res, next) {
@@ -72,7 +91,7 @@ async function destroy(req, res) {
 
 module.exports = {
     list: [asyncErrorBoundary(list)],
-    create: [asyncErrorBoundary(hasOnlyValidProperties), asyncErrorBoundary(create)],
+    create: [asyncErrorBoundary(hasOnlyValidProperties), asyncErrorBoundary(hasTableName), hasRequiredFields, asyncErrorBoundary(create)],
     update: [asyncErrorBoundary(hasOnlyValidProperties), asyncErrorBoundary(tableExists), asyncErrorBoundary(update)],
-    delete: [asyncErrorBoundary(tableExists), asyncErrorBoundary(destroy)],
+    delete: [asyncErrorBoundary(tableExists), asyncErrorBoundary(isTableOccupied), asyncErrorBoundary(destroy)],
 }

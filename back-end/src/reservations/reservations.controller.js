@@ -94,7 +94,10 @@ async function hasValidStatus(req, res, next) {
   if (!validStatus.includes(status)) {
     return next({ status: 400, message: `${status} unknown, please select a valid status: ${validStatus.join(", ")}`}) 
   }
-  next();
+  if (status === "finished") {
+    return next({ status: 400, message: "A finished reservation cannot be amended." })
+  }
+  next()
 }
 
 // if the fields are missing then
@@ -135,17 +138,16 @@ function hasMissingValues(req, res, next) {
 // HTTP verbs
 async function list(req, res) {
   const { date, mobile_number } = req.query;
-  let results;
+  console.log(date, mobile_number, "Hello this is the date and mobile number")
 
   if (date) {
-    results = await reservationService.listByDate(date);
-  } else if (mobile_number) {
-    results = await reservationService.search(mobile_number);
+    const result = await reservationService.listByDate(date)
+    console.log(result, "jeff");
+    res.json({ data: result })
   } else {
-    results = await reservationService.list();
-    
-  }
-  res.json({ data: results });
+    const result = await reservationService.search(mobile_number)
+    res.json({ data: result })
+  } 
 }
 
 async function read(req, res) {
@@ -159,7 +161,7 @@ async function create(req, res) {
 
 async function update(req, res, next) {
   const updatedReservation = {
-    ...req.locals.reservation,
+    ...res.locals.reservation,
     ...req.body.data,
   };
   const results = await reservationService.update(updatedReservation);
@@ -167,14 +169,14 @@ async function update(req, res, next) {
 }
 
 async function updateStatus(req, res) {
-  const { reservation } = res.locals;
+  const { status } = req.body.data;
+  const { reservation_id } = req.params;
+  
   const results = await reservationService.updateByStatus(
-    reservation.reservation_id,
-    reservation.status
+    reservation_id,
+    status
   );
-  const updatedStatus = {
-    ...reservation, ...req.body.data
-  }
+ 
   res.json({ data: results });
 }
 
